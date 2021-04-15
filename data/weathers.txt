@@ -1,0 +1,4 @@
+1, Ha Noi, Mua, 30, 35, Mua, 25, 32, Mua nhe, 28, 33, Mua, 33, 37, Nang nhe, 25, 28, Mua, 28, 34, Mua, 33, 39
+2, HCM, Nang, 28, 33, Nang nhe, 28, 38, Nang, 25, 30, Nang nhe, 30, 37, Mua nhe, 28, 36, Mua, 26, 35, Mua, 30, 38
+3, Da Nang, Mua, 27, 32, Nang, 25, 35, Mua, 31, 35, Nang, 34, 42, Mua nhe, 26, 29, Mua nhe, 29, 33, Mua nhe, 26, 35
+4, Can Tho, Nang, 26, 33, Nang, 32, 40, Mua nhe, 30, 38, Mua nhe, 29, 33, Mua nhe, 33, 39, Mua nhe, 32, 41, Nang, 33, 39

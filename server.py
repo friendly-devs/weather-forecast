@@ -1,15 +1,15 @@
 import socket
 import re
-from manage_user import UserManager
-from weather_manage import WeatherManager
+from user import UserManager
+from weather import WeatherManager
 
 HOST = '127.0.0.1'
 PORT = 8081
 DATA_LENGTH = 1024
 SUCCESS = b'success'
 
-user_file = 'users.txt'
-weather_file = 'weather.txt'
+user_file = 'data/users.txt'
+weather_file = 'data/weathers.txt'
 
 userManager = UserManager(user_file)
 weatherManager = WeatherManager(weather_file)
@@ -53,10 +53,18 @@ def login(client, data):
                 client.sendall(str_to_bytes(weathers))
 
             elif data.startswith('city'):
-                client.sendall(b'HN mua nha')
+                items = data.split(' ')
+                if len(items) == 2:
+                    city_id = items[1]
+                    weathers = weatherManager.get_by_id(city_id)
+
+                    if weathers is not None:
+                        client.sendall(str_to_bytes(weathers))
+                        continue
+                client.sendall(b'city id khong hop le')
 
             else:
-                client.sendall(b'id khong hop le')
+                client.sendall(b'command khong hop le')
 
 
 def register(client, data):
@@ -108,3 +116,4 @@ if __name__ == '__main__':
             handle_client(connect)
     finally:
         server.close()
+        userManager.save_to_file()

@@ -1,9 +1,9 @@
 import socket
 
 HOST = '127.0.0.1'
-PORT = 8080
+PORT = 8081
 DATA_LENGTH = 1024
-SUCCESS = b'success'
+SUCCESS = 'success'
 
 
 def str_to_bytes(data: str):
@@ -21,7 +21,34 @@ def login(client):
 
     client.sendall(str_to_bytes(data))
     data = client.recv(DATA_LENGTH)
+    data = bytes_to_str(data)
+
     print(data)
+
+    if data != SUCCESS:
+        print(data)
+        return
+
+    print('----------------------------------')
+    print('Danh sach thoi thiet cac thanh pho')
+    print(data)
+
+    while True:
+        client.sendall(b'list all')
+        data = client.recv(DATA_LENGTH)
+        data = bytes_to_str(data)
+
+
+        text = input('Nhap id thanh pho ban muon tham khao (exit de ket thuc): ').strip()
+
+        if text.startswith('exit'):
+            raise Exception('Exit')
+
+        client.sendall(str_to_bytes('city ' + text))
+
+        data = client.recv(DATA_LENGTH)
+        data = bytes_to_str(data)
+        print(data)
 
 
 def register(client):
@@ -48,6 +75,7 @@ def handle(client):
         elif choice == '2':
             register(client)
         elif choice == '3':
+            client.sendall(b'exit')
             return
         else:
             print('Ban nhap khong hop le')
@@ -61,3 +89,4 @@ if __name__ == '__main__':
         handle(client)
     finally:
         client.close()
+        exit(0)

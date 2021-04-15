@@ -1,5 +1,10 @@
 import re
-from user import User
+
+
+class User:
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
 
 
 class UserIO:
@@ -27,9 +32,10 @@ class UserIO:
 
 class UserManager:
     def __init__(self, file_name):
+        self.file_name = file_name
         self.dict = {}
-        users = UserIO.read_users(file_name)
-        for user in users:
+        self.users = UserIO.read_users(file_name)
+        for user in self.users:
             self.dict[user.username] = user
 
     def login(self, username, password):
@@ -45,7 +51,12 @@ class UserManager:
         regex = '^[a-zA-Z0-9]{4,}$'
 
         if re.match(regex, username) and re.match(regex, password):
-            self.dict[username] = User(username, password)
+            user = User(username, password)
+            self.dict[username] = user
+            self.users.append(user)
             return True
 
         return False
+
+    def save_to_file(self):
+        UserIO.save_users(self.file_name, self.users)
