@@ -1,20 +1,28 @@
 import socket
 import re
 from manage_user import UserManager
+from weather_manage import WeatherManager
 
 HOST = '127.0.0.1'
-PORT = 8080
+PORT = 8081
 DATA_LENGTH = 1024
 SUCCESS = b'success'
 
-file_name = 'users.txt'
-userManager = UserManager(file_name)
+user_file = 'users.txt'
+weather_file = 'weather.txt'
+
+userManager = UserManager(user_file)
+weatherManager = WeatherManager(weather_file)
 
 
 def bytes_to_str(data):
     if isinstance(data, bytes):
         return data.decode()
     return None
+
+
+def str_to_bytes(data):
+    return data.encode()
 
 
 def check_login(data):
@@ -39,6 +47,16 @@ def login(client, data):
 
             if data.startswith('exit'):
                 raise Exception('Client exit')
+
+            elif data.startswith('list all'):
+                weathers = weatherManager.get_all()
+                client.sendall(str_to_bytes(weathers))
+
+            elif data.startswith('city'):
+                client.sendall(b'HN mua nha')
+
+            else:
+                client.sendall(b'id khong hop le')
 
 
 def register(client, data):

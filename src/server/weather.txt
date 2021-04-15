@@ -1,2 +1,4 @@
 1, Ha Noi, Mua, 30, 35
 2, HCM, Nang, 28, 33
+2, Da Nang, Mua, 27, 32
+2, Can Tho, Nang, 26, 33
