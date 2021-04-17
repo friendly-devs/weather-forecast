@@ -1,10 +1,11 @@
 import socket
 import re
+import threading
 from user import UserManager
 from weather import WeatherManager
 
 HOST = '127.0.0.1'
-PORT = 8081
+PORT = 8082
 DATA_LENGTH = 1024
 SUCCESS = b'success'
 
@@ -16,9 +17,7 @@ weatherManager = WeatherManager(weather_file)
 
 
 def bytes_to_str(data):
-    if isinstance(data, bytes):
-        return data.decode()
-    return None
+    return data.decode()
 
 
 def str_to_bytes(data):
@@ -34,6 +33,22 @@ def check_login(data):
     return userManager.login(items[1], items[2])
 
 
+def register(client, data):
+    items = data.split(' ')
+
+    _, username, password = items
+    regex = '^[a-zA-Z0-9]{4,}$'
+
+    if re.match(regex, username) and re.match(regex, password):
+        if userManager.register(username, password):
+            userManager.save_to_file()
+            client.sendall(b'Dang ki thanh cong')
+        else:
+            client.sendall(b'Username da ton tai')
+    else:
+        client.sendall(b'Username va password can co do dai la 4, chi chua cac ki tu (a-zA-Z0-9)')
+
+
 def login(client, data):
     if not check_login(data):
         client.sendall(b'Username hoac password sai')
@@ -45,8 +60,8 @@ def login(client, data):
 
             print(data)
 
-            if data.startswith('exit'):
-                raise Exception('Client exit')
+            if data.startswith('exit') or len(data) == 0:
+                raise RuntimeError('Client exit')
 
             elif data.startswith('list all'):
                 weathers = weatherManager.get_all()
@@ -65,21 +80,6 @@ def login(client, data):
 
             else:
                 client.sendall(b'command khong hop le')
-
-
-def register(client, data):
-    items = data.split(' ')
-
-    _, username, password = items
-    regex = '^[a-zA-Z0-9]{4,}$'
-
-    if re.match(regex, username) and re.match(regex, password):
-        if userManager.register(username, password):
-            client.sendall(b'Dang ki thanh cong')
-        else:
-            client.sendall(b'Username da ton tai')
-    else:
-        client.sendall(b'Username va password can co do dai la 4, chi chua cac ki tu (a-zA-Z0-9)')
 
 
 def handle_client(client):
@@ -101,6 +101,8 @@ def handle_client(client):
 
             else:
                 client.sendall(b'Sai command')
+    except RuntimeError:
+        print('Client exit')
     finally:
         client.close()
 
@@ -113,7 +115,9 @@ if __name__ == '__main__':
 
         while True:
             connect, _ = server.accept()
-            handle_client(connect)
-    finally:
+            thread = threading.Thread(target=handle_client, args=(connect,))
+            thread.setDaemon(True)
+            thread.start()
+    except (KeyboardInterrupt, SystemExit):
+        print('Shutdown server')
         server.close()
-        userManager.save_to_file()
