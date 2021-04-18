@@ -1,62 +1,31 @@
-import re
-
-
-class User:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-
-
-class UserIO:
-
-    @staticmethod
-    def read_users(file_name):
-        users = []
-
-        with open(file_name, 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                items = line.strip().split(' ')
-                if len(items) == 2:
-                    user = User(items[0], items[1])
-                    users.append(user)
-
-        return users
-
-    @staticmethod
-    def save_users(file_name, users):
-        with open(file_name, 'w') as file:
-            for user in users:
-                file.write("{} {}\n".format(user.username, user.password))
+import mysql.connector
 
 
 class UserManager:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.dict = {}
-        self.users = UserIO.read_users(file_name)
-        for user in self.users:
-            self.dict[user.username] = user
+    def __init__(self, connect: mysql.connector.CMySQLConnection):
+        self.connect = connect
 
-    def login(self, username, password):
-        user = self.dict.get(username)
-        if user is not None:
-            return user.password == password
+    # success
+    def login(self, username: str, password: str) -> bool:
+        cursor = self.connect.cursor()
+        query = """select username, password from users where username=%s"""
+
+        cursor.execute(query, (username,))
+
+        for row in cursor:
+            if row[1] == password:
+                return True
         return False
 
-    def register(self, username, password):
-        if self.dict.get(username) is not None:
-            return False
+    # success
+    def register(self, username: str, password: str) -> bool:
+        cursor = self.connect.cursor()
+        query = """insert into users(username, password) values(%s, %s)"""
 
-        regex = '^[a-zA-Z0-9]{4,}$'
-
-        if re.match(regex, username) and re.match(regex, password):
-            user = User(username, password)
-            self.dict[username] = user
-            self.users.append(user)
+        try:
+            cursor.execute(query, (username, password))
+            self.connect.commit()
             return True
-
-        return False
-
-    def save_to_file(self):
-        UserIO.save_users(self.file_name, self.users)
+        except Exception as e:
+            print(e)
+            return False

@@ -1,123 +1,96 @@
 import socket
 import re
+import mysql.connector
 import threading
+
+from connection import get_connection
+from utils import str_to_bytes, bytes_to_str
+from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH
 from user import UserManager
-from weather import WeatherManager
-
-HOST = '127.0.0.1'
-PORT = 8082
-DATA_LENGTH = 1024
-SUCCESS = b'success'
-
-user_file = 'data/users.txt'
-weather_file = 'data/weathers.txt'
-
-userManager = UserManager(user_file)
-weatherManager = WeatherManager(weather_file)
 
 
-def bytes_to_str(data):
-    return data.decode()
+class HandleClient:
+    def __init__(self, client: socket, connect: mysql.connector.CMySQLConnection):
+        self.client: socket = client
+        self.userManager = UserManager(connect)
+        self.is_login = False
+        self.is_admin = False
+
+    def start(self):
+        try:
+            while True:
+                data: bytes = self.client.recv(SERVER_DATA_LENGTH)
+                data: str = bytes_to_str(data)
+                data: str = data.strip()
+
+                # break
+                if len(data) == 0 or data.startswith('exit'):
+                    break
+
+                print(data)
+
+                if data.startswith('login'):
+                    self.login(data)
+                elif data.startswith('register'):
+                    self.register(data)
+                elif data.startswith('cities'):
+                    self.find_cities()
+                elif data.startswith('city'):
+                    self.find_city(data)
+                elif data.startswith('add_city'):
+                    self.add_city(data)
+                elif data.startswith('update_weather'):
+                    self.update_weather(data)
+                else:
+                    self.client.sendall(b'Command khong hop le')
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.client.close()
+
+    def login(self, data: str):
+        items = data.split(' ')
+        _, username, password = items
+
+        regex = ''
 
 
-def str_to_bytes(data):
-    return data.encode()
+    def register(seft, data: str):
+        print(data)
 
+    def find_city(self, data: str):
+        print(data)
 
-def check_login(data):
-    items = data.split(' ')
+    def find_cities(self):
+        print('find cities')
 
-    if len(items) != 3:
-        return False
+    def add_city(self, data: str):
+        print(data)
 
-    return userManager.login(items[1], items[2])
-
-
-def register(client, data):
-    items = data.split(' ')
-
-    _, username, password = items
-    regex = '^[a-zA-Z0-9]{4,}$'
-
-    if re.match(regex, username) and re.match(regex, password):
-        if userManager.register(username, password):
-            userManager.save_to_file()
-            client.sendall(b'Dang ki thanh cong')
-        else:
-            client.sendall(b'Username da ton tai')
-    else:
-        client.sendall(b'Username va password can co do dai la 4, chi chua cac ki tu (a-zA-Z0-9)')
-
-
-def login(client, data):
-    if not check_login(data):
-        client.sendall(b'Username hoac password sai')
-    else:
-        client.sendall(SUCCESS)
-        while True:
-            data = client.recv(DATA_LENGTH)
-            data = bytes_to_str(data)
-
-            print(data)
-
-            if data.startswith('exit') or len(data) == 0:
-                raise RuntimeError('Client exit')
-
-            elif data.startswith('list all'):
-                weathers = weatherManager.get_all()
-                client.sendall(str_to_bytes(weathers))
-
-            elif data.startswith('city'):
-                items = data.split(' ')
-                if len(items) == 2:
-                    city_id = items[1]
-                    weathers = weatherManager.get_by_id(city_id)
-
-                    if weathers is not None:
-                        client.sendall(str_to_bytes(weathers))
-                        continue
-                client.sendall(b'city id khong hop le')
-
-            else:
-                client.sendall(b'command khong hop le')
-
-
-def handle_client(client):
-    try:
-        while True:
-            data = client.recv(DATA_LENGTH)
-            data = bytes_to_str(data)
-
-            print(data)
-
-            if data.startswith('login'):
-                login(client, data)
-
-            elif data.startswith('register'):
-                register(client, data)
-
-            elif data.startswith('exit'):
-                break
-
-            else:
-                client.sendall(b'Sai command')
-    except RuntimeError:
-        print('Client exit')
-    finally:
-        client.close()
+    def update_weather(self, data: str):
+        print(data)
 
 
 if __name__ == '__main__':
     try:
+        mysql_connect = get_connection()
+
+        if mysql_connect is None:
+            print('Khong the ket noi den MYSQL')
+            exit(1)
+
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind((HOST, PORT))
+        server.bind((SERVER_HOST, SERVER_PORT))
         server.listen()
 
         while True:
-            connect, _ = server.accept()
-            thread = threading.Thread(target=handle_client, args=(connect,))
-            thread.setDaemon(True)
+            client, _ = server.accept()
+            handler = HandleClient(client=client, connect=mysql_connect)
+
+            thread = threading.Thread(target=handler.start, daemon=True)
             thread.start()
     except (KeyboardInterrupt, SystemExit):
         print('Shutdown server')
+        client.close()
         server.close()
