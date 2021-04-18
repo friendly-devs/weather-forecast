@@ -9,15 +9,29 @@ class WeatherManager:
     def add_city(self, name) -> bool:
         cursor = self.connect.cursor(buffered=True)
         query = """insert into cities(name) values(%s)"""
-        cursor.execute(query, (name,))
 
         # commit data
         try:
+            cursor.execute(query, (name,))
             self.connect.commit()
             return True
         except Exception as e:
             print(e)
             return False
+
+    def list_city(self):
+        cursor = self.connect.cursor(buffered=True)
+        query = """select id, name from cities"""
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if len(rows) == 0:
+            return 'Khong co thanh pho de show'
+
+        result = '{:10s} {:20s}\n'.format('Id', 'Ten thanh pho')
+        for (id, name) in rows:
+            result += '{:10s} {:20s}\n'.format(str(id), name)
+        return result
 
     # success
     def __format_data(self, rows) -> str:
@@ -83,9 +97,13 @@ class WeatherManager:
         cursor = self.connect.cursor(buffered=True)
         query = """select count(*) from weathers where city_id={} and day='{}'""".format(city_id, day)
 
-        cursor.execute(query)
-        data = cursor.fetchone()
-        count = data[0]
+        try:
+            cursor.execute(query)
+            data = cursor.fetchone()
+            count = data[0]
+        except Exception as e:
+            print(e)
+            return False
 
         if count == 0:
             return self.__add_weather(city_id, day, status, temp_min, temp_max)
@@ -126,4 +144,4 @@ class WeatherManager:
             return True
         except Exception as e:
             print(e)
-            return False
+        return False

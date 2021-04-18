@@ -1,17 +1,18 @@
-import socket
 import re
-import mysql.connector
-import threading
+import socket
 
+from threading import Thread, Semaphore
 from connection import get_connection
 from utils import str_to_bytes, bytes_to_str
 from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH, MESSAGE_SUCCESS
 from user import UserManager
 from weather import WeatherManager
+from mysql.connector import CMySQLConnection
 
 
 class HandleClient:
-    def __init__(self, client_socket: socket, connect: mysql.connector.CMySQLConnection):
+    def __init__(self, client_socket: socket.socket, connect: CMySQLConnection, semaphore: Semaphore):
+        self.semaphore = semaphore
         self.client = client_socket
         self.userManager = UserManager(connect)
         self.weatherManager = WeatherManager(connect)
@@ -43,12 +44,15 @@ class HandleClient:
                     self.add_city(data)
                 elif data.startswith('update_weather'):
                     self.update_weather(data)
+                elif data.startswith('list_city'):
+                    self.list_city()
                 else:
                     self.client.sendall(b'Command khong hop le')
 
         except Exception as e:
             print(e)
         finally:
+            self.semaphore.release()
             self.client.close()
 
     def login(self, data: str):
@@ -105,13 +109,48 @@ class HandleClient:
             self.client.sendall(b'Ban khong co quyen admin')
             return
 
+        index = len('add_city ')
+        city_name = data[index:]
+
+        result = self.weatherManager.add_city(city_name)
+        if result:
+            self.client.sendall(b'Ban da them thanh cong')
+        else:
+            self.client.sendall(b'Ban them that bai')
+
     def update_weather(self, data: str):
         if not self.is_login:
             self.client.sendall(b'Ban phai dang nhap')
             return
 
+        index = len('update_weather ')
+        dict = eval(data[index:])
+
+        result = self.weatherManager.save_weather(
+            dict['city_id'],
+            dict['day'],
+            dict['status'],
+            dict['temp_min'],
+            dict['temp_max']
+        )
+
+        if result:
+            self.client.sendall(b'Cap nhat thanh cong')
+        else:
+            self.client.sendall(b'Cap nhat that bai')
+
+    def list_city(self):
+        data = self.weatherManager.list_city()
+        data = str_to_bytes(data)
+        self.client.sendall(data)
+
 
 if __name__ == '__main__':
+    max = input('Max thread: ').strip()
+    max = int(max)
+
+    available = Semaphore(max)
+
     try:
         mysql_connect = get_connection()
 
@@ -123,11 +162,11 @@ if __name__ == '__main__':
         server.bind((SERVER_HOST, SERVER_PORT))
         server.listen()
 
-        while True:
+        while available.acquire():
             client, _ = server.accept()
-            handler = HandleClient(client, mysql_connect)
+            handler = HandleClient(client, mysql_connect, available)
 
-            thread = threading.Thread(target=handler.start, daemon=True)
+            thread = Thread(target=handler.start, daemon=True)
             thread.start()
     except Exception as e:
         print(e)

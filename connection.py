@@ -13,22 +13,4 @@ def get_connection() -> mysql.connector.CMySQLConnection:
         )
     except Exception as e:
         print(e)
-        return None
-
-#
-# cursor = connect.cursor()
-#
-# query = """insert into users(username, password) values(%s, %s)"""
-#
-# cursor.execute(query, ('user0143', '7789'))
-# connect.commit()
-#
-# query = """select username, password from users"""
-
-# cursor.execute(query)
-#
-# for (username, password) in cursor:
-#     print(username, password)
-#
-# cursor.close()
-# connect.close()
+    return None
