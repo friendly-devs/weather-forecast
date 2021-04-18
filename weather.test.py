@@ -23,17 +23,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(True, result)
 
     def test_update_weather(self):
-        # Arrange
-        city_id = 2
-        day = '2020-05-23'
-        status ='Mua vua lon vua nho'
-        temp_min, temp_max = 30, 41
-
-        # Act
-        result = self.manager.save_weather(city_id, day, status, temp_min, temp_max)
-
-        # Assert
-        self.assertEqual(True, result)
+        data = self.manager.get_city(1)
+        print(data)
 
 
 if __name__ == '__main__':

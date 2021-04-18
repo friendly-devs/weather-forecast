@@ -1,8 +1,6 @@
 import socket
+from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH
 
-HOST = '127.0.0.1'
-PORT = 8082
-DATA_LENGTH = 1024
 SUCCESS = 'success'
 
 
@@ -20,15 +18,15 @@ def login(client):
     data = 'login {} {}'.format(username, password)
 
     client.sendall(str_to_bytes(data))
-    data = client.recv(DATA_LENGTH)
+    data = client.recv(SERVER_DATA_LENGTH)
     data = bytes_to_str(data)
 
     if data != SUCCESS:
         print(data)
         return
 
-    client.sendall(b'list all')
-    data = client.recv(DATA_LENGTH)
+    client.sendall(b'cities')
+    data = client.recv(SERVER_DATA_LENGTH)
     data = bytes_to_str(data)
 
     print('----------------------------------')
@@ -44,18 +42,19 @@ def login(client):
 
         client.sendall(str_to_bytes('city ' + text))
 
-        data = client.recv(DATA_LENGTH)
+        data = client.recv(SERVER_DATA_LENGTH)
         data = bytes_to_str(data)
         print(data)
 
 
+# success
 def register(client):
     username = input('Nhap username: ').strip()
     password = input('Nhap password: ').strip()
     data = 'register {} {}'.format(username, password)
 
     client.sendall(str_to_bytes(data))
-    data = client.recv(DATA_LENGTH)
+    data = client.recv(SERVER_DATA_LENGTH)
     data = bytes_to_str(data)
     print(data)
 
@@ -82,7 +81,7 @@ def handle(client):
 if __name__ == '__main__':
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((HOST, PORT))
+        client.connect((SERVER_HOST, SERVER_PORT))
         handle(client)
     finally:
         client.close()

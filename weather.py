@@ -52,12 +52,13 @@ class WeatherManager:
             order by day;
         """.format(city_id)
 
-        row_count = cursor.execute(query)
+        cursor.execute(query)
+        rows = cursor.fetchall()
 
-        if row_count == 0:
+        if len(rows) == 0:
             return 'Chua co du lieu thoi tiet cho 7 ngay toi'
         else:
-            return self.__format_data(cursor)
+            return self.__format_data(rows)
 
     # success
     def get_cities(self) -> str:
@@ -69,12 +70,13 @@ class WeatherManager:
             where day=CURDATE();
         """
 
-        row_count = cursor.execute(query)
+        cursor.execute(query)
+        rows = cursor.fetchall()
 
-        if row_count == 0:
+        if len(rows) == 0:
             return 'Chua co du lieu thoi tiet cho hom nay'
         else:
-            return self.__format_data(cursor)
+            return self.__format_data(rows)
 
     # success
     def save_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> str:
