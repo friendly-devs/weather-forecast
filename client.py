@@ -63,13 +63,13 @@ class HandleServer:
             data = self.client.recv(SERVER_DATA_LENGTH)
             return len(data) != 0
         except Exception as e:
-            print(e)
+            # print(e)
             return False
 
     def menu(self):
         while True:
             if not self.still_connected():
-                print('Disconnect')
+                print('Server bi mat ket noi')
                 self.client.close()
                 exit(0)
 
