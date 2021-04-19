@@ -18,6 +18,7 @@ class HandleClient:
         self.weatherManager = WeatherManager(connect)
         self.is_login = False
         self.is_admin = False
+        self.username = ''
 
     def start(self):
         try:
@@ -52,6 +53,7 @@ class HandleClient:
         except Exception as e:
             print(e)
         finally:
+            print('client {} out'.format(self.username))
             self.semaphore.release()
             self.client.close()
 
@@ -62,6 +64,7 @@ class HandleClient:
         if self.userManager.login(username, password):
             self.client.sendall(MESSAGE_SUCCESS)
             self.is_login = True
+            self.username = username
             if username == 'admin':
                 self.is_admin = True
         else:
