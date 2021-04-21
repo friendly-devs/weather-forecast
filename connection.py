@@ -1,16 +1,10 @@
-import mysql.connector
-from constants import MYSQL_HOST, MYSQL_PORT, MYSQL_DB, MYSQL_USERNAME, MYSQL_PASSWORD
+import sqlite3
+from sqlite3 import Connection
 
 
-def get_connection() -> mysql.connector.CMySQLConnection:
+def get_connection() -> Connection:
     try:
-        return mysql.connector.connect(
-            host=MYSQL_HOST,
-            port=MYSQL_PORT,
-            database=MYSQL_DB,
-            user=MYSQL_USERNAME,
-            password=MYSQL_PASSWORD
-        )
+        return sqlite3.connect('sql.db')
     except Exception as e:
         print(e)
     return None

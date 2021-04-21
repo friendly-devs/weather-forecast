@@ -1,13 +1,13 @@
-import mysql.connector
+from sqlite3 import Connection
 
 
 class WeatherManager:
-    def __init__(self, connect: mysql.connector.CMySQLConnection):
+    def __init__(self, connect: Connection):
         self.connect = connect
 
     # success
     def add_city(self, name) -> bool:
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """insert into cities(name) values(%s)"""
 
         # commit data
@@ -20,7 +20,7 @@ class WeatherManager:
             return False
 
     def list_city(self):
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """select id, name from cities"""
         cursor.execute(query)
         rows = cursor.fetchall()
@@ -57,12 +57,12 @@ class WeatherManager:
 
     # success
     def get_city(self, city_id) -> str:
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """
             select cities.id, cities.name, day, status, temp_min, temp_max from cities
             inner join weathers
             on cities.id = weathers.city_id
-            where city_id={} and day between curdate() and curdate() + 6
+            where city_id={} and day between date() and date('now', '+6 day')
             order by day;
         """.format(city_id)
 
@@ -81,7 +81,7 @@ class WeatherManager:
             select cities.id, cities.name, day, status, temp_min, temp_max from cities
             inner join weathers
             on cities.id = weathers.city_id
-            where day=CURDATE();
+            where day=date();
         """
 
         cursor.execute(query)
@@ -94,7 +94,7 @@ class WeatherManager:
 
     # success
     def save_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> str:
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """select count(*) from weathers where city_id={} and day='{}'""".format(city_id, day)
 
         try:
@@ -112,7 +112,7 @@ class WeatherManager:
 
     # success
     def __update_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> bool:
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """
             update weathers 
             set 
@@ -132,7 +132,7 @@ class WeatherManager:
 
     # success
     def __add_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> bool:
-        cursor = self.connect.cursor(buffered=True)
+        cursor = self.connect.cursor()
         query = """
             insert into weathers(city_id, status, day, temp_min, temp_max)
             values({}, '{}', '{}', {}, {})
