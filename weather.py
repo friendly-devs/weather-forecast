@@ -8,7 +8,7 @@ class WeatherManager:
     # success
     def add_city(self, name) -> bool:
         cursor = self.connect.cursor()
-        query = """insert into cities(name) values(%s)"""
+        query = """insert into cities(name) values(?)"""
 
         # commit data
         try:
