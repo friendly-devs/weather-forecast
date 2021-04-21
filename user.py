@@ -1,14 +1,14 @@
-import mysql.connector
+from sqlite3 import Connection
 
 
 class UserManager:
-    def __init__(self, connect: mysql.connector.CMySQLConnection):
+    def __init__(self, connect: Connection):
         self.connect = connect
 
     # success
     def login(self, username: str, password: str) -> bool:
         cursor = self.connect.cursor()
-        query = """select username, password from users where username=%s"""
+        query = """select username, password from users where username=?"""
 
         cursor.execute(query, (username,))
 
@@ -20,7 +20,7 @@ class UserManager:
     # success
     def register(self, username: str, password: str) -> bool:
         cursor = self.connect.cursor()
-        query = """insert into users(username, password) values(%s, %s)"""
+        query = """insert into users(username, password) values(?, ?)"""
 
         try:
             cursor.execute(query, (username, password))

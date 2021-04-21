@@ -7,18 +7,19 @@ from utils import str_to_bytes, bytes_to_str
 from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH, MESSAGE_SUCCESS
 from user import UserManager
 from weather import WeatherManager
-from mysql.connector import CMySQLConnection
+from sqlite3 import Connection
 
 
 class HandleClient:
-    def __init__(self, client_socket: socket.socket, connect: CMySQLConnection, semaphore: Semaphore):
+    def __init__(self, client_socket: socket.socket, semaphore: Semaphore):
         self.semaphore = semaphore
         self.client = client_socket
-        self.userManager = UserManager(connect)
-        self.weatherManager = WeatherManager(connect)
+        self.connect = get_connection()
+        self.userManager = UserManager(self.connect)
+        self.weatherManager = WeatherManager(self.connect)
         self.is_login = False
         self.is_admin = False
-        self.username = ''
+        self.username = 'anonymous'
 
     def start(self):
         try:
@@ -56,6 +57,7 @@ class HandleClient:
             print('client {} out'.format(self.username))
             self.semaphore.release()
             self.client.close()
+            self.connect.close()
 
     def login(self, data: str):
         items = data.split(' ')
@@ -148,6 +150,11 @@ class HandleClient:
         self.client.sendall(data)
 
 
+def handler_client(client: socket.socket, available: Semaphore):
+    handler = HandleClient(client, available)
+    handler.start()
+
+
 if __name__ == '__main__':
     max = input('Max thread: ').strip()
     max = int(max)
@@ -155,24 +162,16 @@ if __name__ == '__main__':
     available = Semaphore(max)
 
     try:
-        mysql_connect = get_connection()
-
-        if mysql_connect is None:
-            print('Khong the ket noi den MYSQL')
-            exit(1)
-
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((SERVER_HOST, SERVER_PORT))
         server.listen()
 
         while available.acquire():
             client, _ = server.accept()
-            handler = HandleClient(client, mysql_connect, available)
 
-            thread = Thread(target=handler.start, daemon=True)
+            thread = Thread(target=handler_client, args=(client, available), daemon=True)
             thread.start()
     except Exception as e:
         print(e)
     finally:
-        mysql_connect.close()
         server.close()
