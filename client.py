@@ -113,7 +113,7 @@ class HandleServer:
             try:
                 number = int(text)
             except ValueError:
-                print('Ban phai nhap id')
+                print('Ban phai nhap so')
                 continue
 
             data = 'city {}'.format(number)
