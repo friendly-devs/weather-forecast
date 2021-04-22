@@ -117,8 +117,7 @@ class HandleClient:
         index = len('add_city ')
         city_name = data[index:]
 
-        result = self.weatherManager.add_city(city_name)
-        if result:
+        if self.weatherManager.add_city(city_name):
             self.client.sendall(b'Ban da them thanh cong')
         else:
             self.client.sendall(b'Ban them that bai')
@@ -166,6 +165,7 @@ if __name__ == '__main__':
         server.bind((SERVER_HOST, SERVER_PORT))
         server.listen()
 
+        print('Watting for connection')
         while available.acquire():
             client, _ = server.accept()
 

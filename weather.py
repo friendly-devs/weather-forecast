@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlite3 import Connection
 
 
@@ -94,6 +95,15 @@ class WeatherManager:
 
     # success
     def save_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> str:
+        # check data
+        try:
+            datetime.strptime(day, '%Y-%m-%d')
+            int(temp_min)
+            int(temp_max)
+        except ValueError as e:
+            print(e)
+            return False
+
         cursor = self.connect.cursor()
         query = """select count(*) from weathers where city_id={} and day='{}'""".format(city_id, day)
 
@@ -133,6 +143,8 @@ class WeatherManager:
     # success
     def __add_weather(self, city_id: int, day: str, status: str, temp_min: int, temp_max: int) -> bool:
         cursor = self.connect.cursor()
+        # To enable check foreign key
+        cursor.execute('PRAGMA foreign_keys = ON;')
         query = """
             insert into weathers(city_id, status, day, temp_min, temp_max)
             values({}, '{}', '{}', {}, {})
