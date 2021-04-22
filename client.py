@@ -1,5 +1,5 @@
 import socket
-from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH
+from constants import SERVER_DATA_LENGTH
 from utils import str_to_bytes, bytes_to_str
 
 SUCCESS = 'success'
@@ -175,8 +175,11 @@ class HandleServer:
 
 if __name__ == '__main__':
     try:
+        server_host = input('Host: ')
+        server_port = input('Port: ')
+        server_port = int(server_port)
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((SERVER_HOST, SERVER_PORT))
+        client.connect((server_host, server_port))
 
         handler = HandleServer(client)
         handler.start()

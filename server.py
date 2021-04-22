@@ -4,10 +4,9 @@ import socket
 from threading import Thread, Semaphore
 from connection import get_connection
 from utils import str_to_bytes, bytes_to_str
-from constants import SERVER_HOST, SERVER_PORT, SERVER_DATA_LENGTH, MESSAGE_SUCCESS
+from constants import SERVER_DATA_LENGTH, MESSAGE_SUCCESS
 from user import UserManager
 from weather import WeatherManager
-from sqlite3 import Connection
 
 
 class HandleClient:
@@ -162,10 +161,13 @@ if __name__ == '__main__':
 
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind((SERVER_HOST, SERVER_PORT))
+        server_host = input('Host: ')
+        server_port = input('Port: ')
+        server_port = int(server_port)
+        server.bind((server_host, server_port))
         server.listen()
 
-        print('Watting for connection')
+        print('Waiting for connection to client...')
         while available.acquire():
             client, _ = server.accept()
 
